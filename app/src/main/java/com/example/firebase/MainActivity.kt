@@ -9,19 +9,31 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import com.example.firebase.modul.Weather
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class MainActivity : AppCompatActivity() {
     private lateinit var launcher: ActivityResultLauncher<Intent>
     private lateinit var auth: FirebaseAuth
+    private lateinit var fireStore: FirebaseFirestore
     private lateinit var button: Button
     private lateinit var button2: Button
+    lateinit var doc: DocumentReference
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -50,6 +62,36 @@ class MainActivity : AppCompatActivity() {
         if (auth.currentUser != null){
             button.visibility = View.INVISIBLE
             button2.visibility = View.VISIBLE
+        }
+        fireStore = FirebaseFirestore.getInstance()
+        doc = fireStore.document("data/link")
+        getData {
+            Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+            getWeather(it.toString())
+        }
+    }
+
+    fun getWeather(url: String){
+        val retrofit = ApiInterface.create(url).getWeather(
+            key = "17445aad957a4d719a3222356221204",
+            q = "Худжанд",
+            aqi = "no"
+        )
+        retrofit.enqueue(object: Callback<Weather>{
+            override fun onResponse(call: Call<Weather>, response: Response<Weather>) {
+                val weather = response.body()?.current
+                Toast.makeText(this@MainActivity, weather?.temp_c.toString(), Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onFailure(call: Call<Weather>, t: Throwable) {
+            }
+
+        })
+    }
+
+    fun getData(onComplete:(String?) -> Unit){
+        doc.get().addOnSuccessListener {
+            onComplete(it["name"].toString())
         }
     }
 
