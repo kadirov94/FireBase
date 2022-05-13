@@ -70,7 +70,7 @@ class MainActivity : AppCompatActivity() {
         val credential = GoogleAuthProvider.getCredential(token, null)
         auth.signInWithCredential(credential).addOnCompleteListener {
             if (it.isSuccessful){
-                Toast.makeText(this, "Успешно выполнен вход с аккаунта" + auth.currentUser?.photoUrl, Toast.LENGTH_SHORT)
+                Toast.makeText(this, "Успешно выполнено вход с аккаунта" + auth.currentUser?.photoUrl, Toast.LENGTH_SHORT)
                     .show()
                 button.visibility = View.INVISIBLE
                 button2.visibility = View.VISIBLE
